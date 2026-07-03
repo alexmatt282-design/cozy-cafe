@@ -19,34 +19,50 @@ export default class BootScene extends Phaser.Scene {
     this.load.image("customer1", "src/assets/customer_1.png");
     this.load.image("customer2", "src/assets/customer_2.png");
     this.load.image("customer3", "src/assets/customer_3.png");
+    this.load.image("customer4", "src/assets/customer_4.png");
+    this.load.image("customer5", "src/assets/customer_5.png");
+    this.load.image("customer6", "src/assets/customer_6.png");
+    this.load.image("customer7", "src/assets/customer_7.png");
+    this.load.image("customer8", "src/assets/customer_8.png");
+
 
     this.load.image("customerSit1", "src/assets/customer_sit_1.png");
     this.load.image("customerSit2", "src/assets/customer_sit_2.png");
     this.load.image("customerSit3", "src/assets/customer_sit_3.png");
+    this.load.image("customerSit4", "src/assets/customer_sit_4.png");
+    this.load.image("customerSit5", "src/assets/customer_sit_5.png");
+    this.load.image("customerSit6", "src/assets/customer_sit_6.png");
+    this.load.image("customerSit7", "src/assets/customer_sit_7.png");
+    this.load.image("customerSit8", "src/assets/customer_sit_8.png");
 
     // -------------------------
     // FOOD (STRAWBERRY CAKE FRAMES)
     // -------------------------
     this.load.image("cake_strawberry_1", "src/assets/cake_strawberry_1.png");
-    this.load.image("cake_strawberry_2", "src/assets/cake_strawberry_2.png");
-    this.load.image("cake_strawberry_3", "src/assets/cake_strawberry_3.png");
-    this.load.image("cake_strawberry_4", "src/assets/cake_strawberry_4.png");
-    this.load.image("cake_strawberry_5", "src/assets/cake_strawberry_5.png");
-    this.load.image("cake_strawberry_6", "src/assets/cake_strawberry_6.png");
-    this.load.image("cake_strawberry_7", "src/assets/cake_strawberry_7.png");
-    this.load.image("cake_strawberry_8", "src/assets/cake_strawberry_8.png");
+   
 
     // -------------------------
     // FOOD (MATCHA LATTE FRAMES)
     // -------------------------
     this.load.image("matcha_latte_1", "src/assets/matcha_latte_1.png");
-    this.load.image("matcha_latte_2", "src/assets/matcha_latte_2.png");
-    this.load.image("matcha_latte_3", "src/assets/matcha_latte_3.png");
-    this.load.image("matcha_latte_4", "src/assets/matcha_latte_4.png");
-    this.load.image("matcha_latte_5", "src/assets/matcha_latte_5.png");
-    this.load.image("matcha_latte_6", "src/assets/matcha_latte_6.png");
-    this.load.image("matcha_latte_7", "src/assets/matcha_latte_7.png");
-    this.load.image("matcha_latte_8", "src/assets/matcha_latte_8.png");
+   
+
+    // -------------------------
+// ADDITIONAL FOOD
+// -------------------------
+this.load.image("coffee_1", "src/assets/coffee_1.png");
+this.load.image("tea_1", "src/assets/tea_1.png");
+this.load.image("latte_regular_1", "src/assets/latte_regular_1.png");
+this.load.image("cinnamon_latte_1", "src/assets/cinnamon_latte_1.png");
+this.load.image("strawberry_milkshake_1", "src/assets/strawberry_milkshake_1.png");
+this.load.image("iced_coffee_1", "src/assets/iced_coffee_1.png");
+this.load.image("lemonade_1", "src/assets/lemonade_1.png");
+this.load.image("cocoa_1", "src/assets/cocoa_1.png");
+this.load.image("cinnamon_roll_1", "src/assets/cinnamon_roll_1.png");
+this.load.image("macaron_1", "src/assets/macaron_1.png");
+this.load.image("chocolate_muffin_1", "src/assets/chocolate_muffin_1.png");
+this.load.image("pudding_1", "src/assets/pudding_1.png");
+this.load.image("cappucino_1", "src/assets/cappucino_1.png");
 
     // -------------------------
     // FURNITURE
@@ -57,38 +73,7 @@ export default class BootScene extends Phaser.Scene {
 
   create() {
     // Strawberry Cake Eating Animation
-this.anims.create({
-  key: "cakeEat",
-  frames: [
-    { key: "cake_strawberry_1" },
-    { key: "cake_strawberry_2" },
-    { key: "cake_strawberry_3" },
-    { key: "cake_strawberry_4" },
-    { key: "cake_strawberry_5" },
-    { key: "cake_strawberry_6" },
-    { key: "cake_strawberry_7" },
-    { key: "cake_strawberry_8" }
-  ],
-  frameRate: 4,
-  repeat: 0
-});
 
-// Matcha Drinking Animation
-this.anims.create({
-  key: "matchaDrink",
-  frames: [
-    { key: "matcha_latte_1" },
-    { key: "matcha_latte_2" },
-    { key: "matcha_latte_3" },
-    { key: "matcha_latte_4" },
-    { key: "matcha_latte_5" },
-    { key: "matcha_latte_6" },
-    { key: "matcha_latte_7" },
-    { key: "matcha_latte_8" }
-  ],
-  frameRate: 4,
-  repeat: 0
-});
     this.scene.start("CafeScene");
   }
 }
