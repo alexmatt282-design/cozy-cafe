@@ -252,10 +252,9 @@ else if (this.heldItem === "matcha_latte") {
     t.foodSprite = null;
   }
 
-  // SAFE: use stored textures instead of undefined variable
   c.sprite.setTexture(c.walkTexture);
   c.state = "leaving";
-
+  c.standDelay = 10;
 });
           }
         });
@@ -265,48 +264,55 @@ else if (this.heldItem === "matcha_latte") {
     // CUSTOMER LOGIC
     this.customers.forEach(c => {
 
-  if (c.state === "walking") {
-
-    const dx = c.targetX - c.sprite.x;
-    const dy = c.targetY - c.sprite.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-
-    if (dist > 2) {
-      c.sprite.setVelocity((dx / dist) * 120, (dy / dist) * 120);
-    } else {
-      c.sprite.setVelocity(0, 0);
-      c.state = "seated";
-      c.sprite.setTexture(c.sitTexture);
-    }
-  }
-
-  else if (c.state === "leaving") {
-
-  // safety guard (prevents crash if data missing)
   if (!c.sprite || !c.sprite.active) return;
 
-  // make sure they are standing (fallback-safe)
-  if (!c.isStanding) {
-    c.sprite.setTexture(c.walkTexture || c.sitTexture);
-    c.isStanding = true;
+  switch (c.state) {
+
+    case "walking": {
+      const dx = c.targetX - c.sprite.x;
+      const dy = c.targetY - c.sprite.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist > 2) {
+        c.sprite.setVelocity((dx / dist) * 120, (dy / dist) * 120);
+      } else {
+        c.sprite.setVelocity(0, 0);
+        c.state = "seated";
+        c.sprite.setTexture(c.sitTexture);
+      }
+      break;
+    }
+
+    case "seated": {
+      c.sprite.setVelocity(0, 0);
+      break;
+    }
+
+    case "eating": {
+      c.sprite.setVelocity(0, 0);
+      break;
+    }
+
+   case "leaving": {
+
+  if (c.standDelay > 0) {
+    c.standDelay--;
+    return;
   }
 
- const dx = c.exitX - c.sprite.x;
- const dy = 0;
+  const dx = c.exitX - c.sprite.x;
 
-  const dist = Math.sqrt(dx * dx + dy * dy);
-
-  if (dist > 5) {
-    c.sprite.setVelocity((dx / dist) * 120, (dy / dist) * 120);
+  if (Math.abs(dx) > 5) {
+    c.sprite.setVelocity(-120, 0);
   } else {
-
     c.sprite.destroy();
     c.table.occupied = false;
-
     this.customers = this.customers.filter(x => x !== c);
   }
-}
 
+  break;
+}
+  }
 });
 
 
