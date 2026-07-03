@@ -20,6 +20,33 @@ export default class CafeScene extends Phaser.Scene {
     this.orderText.setText(text);
   }
 
+  updateKeyHelp() {
+    this.keyHelp.setText(
+`FOOD CONTROLS:
+
+1  cake_strawberry
+2  matcha_latte
+3  coffee
+4  latte_regular
+5  cappucino
+6  tea
+7  iced_coffee
+8  lemonade
+9  cocoa
+0  strawberry_milkshake
+
+Q  cinnamon_latte
+W  cinnamon_roll
+E  macaron
+R  chocolate_muffin
+T  pudding
+
+F = take order
+SPACE = serve
+X = cancel item`
+    );
+  }
+
   create() {
     const TILE = 32;
 
@@ -78,8 +105,8 @@ export default class CafeScene extends Phaser.Scene {
     this.ITEM_SCALE = {
       cake_strawberry: 0.10,
       matcha_latte: 0.10,
-
-      default: 0.18
+      default: 0.18,
+      cappucino: 0.16
     };
 
     // PLAYER
@@ -100,6 +127,18 @@ export default class CafeScene extends Phaser.Scene {
 
     this.orderText.setScrollFactor(0);
     this.orderText.setDepth(999);
+
+    this.keyHelp = this.add.text(20, 120, "", {
+      fontSize: "14px",
+      fill: "#000",
+      backgroundColor: "#ffffff",
+      padding: { x: 10, y: 8 }
+    });
+
+    this.keyHelp.setScrollFactor(0);
+    this.keyHelp.setDepth(999);
+
+    this.updateKeyHelp();
 
     this.heldItem = null;
     this.heldSprite = null;
@@ -217,7 +256,6 @@ export default class CafeScene extends Phaser.Scene {
       moving = true;
     }
 
-    // movement animation
     if (moving) {
       this.walkTimer++;
       if (this.walkTimer > 8) {
@@ -231,7 +269,6 @@ export default class CafeScene extends Phaser.Scene {
       this.player.setTexture("player_1");
     }
 
-    // EQUIP ITEMS
     const bind = (key, item) => {
       if (Phaser.Input.Keyboard.JustDown(this.keys[key])) {
         this.equipItem(item);
@@ -254,22 +291,18 @@ export default class CafeScene extends Phaser.Scene {
     bind("r","chocolate_muffin");
     bind("t","pudding");
 
-    // CANCEL ITEM
     if (Phaser.Input.Keyboard.JustDown(this.keys.x)) {
       this.clearHeldItem();
     }
 
-    // ORDER TAKING
     if (Phaser.Input.Keyboard.JustDown(this.keys.f)) {
       this.tryTakeOrder();
     }
 
-    // SERVE
     if (Phaser.Input.Keyboard.JustDown(this.keys.space)) {
       this.serveFood();
     }
 
-    // FOLLOW HAND
     if (this.heldSprite) {
       const b = this.player.getBounds();
       this.heldSprite.setPosition(this.player.x, b.y + b.height * 0.5);
@@ -287,11 +320,7 @@ export default class CafeScene extends Phaser.Scene {
 
     if (this.heldSprite) this.heldSprite.destroy();
 
-    this.heldSprite = this.add.image(
-      this.player.x,
-      this.player.y,
-      texture
-    );
+    this.heldSprite = this.add.image(this.player.x, this.player.y, texture);
 
     const scale = this.ITEM_SCALE[item] ?? this.ITEM_SCALE.default;
     this.heldSprite.setScale(scale);
@@ -330,47 +359,46 @@ export default class CafeScene extends Phaser.Scene {
   }
 
   serveFood() {
-  if (!this.heldItem) return;
+    if (!this.heldItem) return;
 
-  for (let c of this.customers) {
-    if (!c || !c.sprite || !c.sprite.active) continue;
+    for (let c of this.customers) {
+      if (!c || !c.sprite || !c.sprite.active) continue;
 
-    const d = Phaser.Math.Distance.Between(
-      this.player.x,
-      this.player.y,
-      c.sprite.x,
-      c.sprite.y
-    );
+      const d = Phaser.Math.Distance.Between(
+        this.player.x,
+        this.player.y,
+        c.sprite.x,
+        c.sprite.y
+      );
 
-    // FIX: allow serving BOTH waitingForFood AND waitingToOrder edge cases
-    if (d < 60 && (c.state === "waitingForFood" || c.state === "waitingToOrder")) {
-      const t = c.table;
+      if (d < 60 && (c.state === "waitingForFood" || c.state === "waitingToOrder")) {
+        const t = c.table;
 
-      if (t.foodSprite) t.foodSprite.destroy();
-
-      const tex = this.ITEMS[this.heldItem];
-      if (!tex) return;
-
-      t.foodSprite = this.add.image(t.foodX, t.foodY, tex);
-
-      const scale = this.ITEM_SCALE[this.heldItem] ?? this.ITEM_SCALE.default;
-      t.foodSprite.setScale(scale);
-      t.foodSprite.setDepth(4);
-
-      this.clearHeldItem();
-
-      c.state = "eating";
-
-      this.time.delayedCall(2000, () => {
         if (t.foodSprite) t.foodSprite.destroy();
-        c.sprite.setTexture(c.walkTexture);
-        c.state = "leaving";
-      });
 
-      break;
+        const tex = this.ITEMS[this.heldItem];
+        if (!tex) return;
+
+        t.foodSprite = this.add.image(t.foodX, t.foodY, tex);
+
+        const scale = this.ITEM_SCALE[this.heldItem] ?? this.ITEM_SCALE.default;
+        t.foodSprite.setScale(scale);
+        t.foodSprite.setDepth(4);
+
+        this.clearHeldItem();
+
+        c.state = "eating";
+
+        this.time.delayedCall(2000, () => {
+          if (t.foodSprite) t.foodSprite.destroy();
+          c.sprite.setTexture(c.walkTexture);
+          c.state = "leaving";
+        });
+
+        break;
+      }
     }
   }
-}
 
   updateCustomers() {
     for (let c of this.customers) {
