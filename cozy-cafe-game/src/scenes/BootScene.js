@@ -56,6 +56,39 @@ export default class BootScene extends Phaser.Scene {
   }
 
   create() {
+    // Strawberry Cake Eating Animation
+this.anims.create({
+  key: "cakeEat",
+  frames: [
+    { key: "cake_strawberry_1" },
+    { key: "cake_strawberry_2" },
+    { key: "cake_strawberry_3" },
+    { key: "cake_strawberry_4" },
+    { key: "cake_strawberry_5" },
+    { key: "cake_strawberry_6" },
+    { key: "cake_strawberry_7" },
+    { key: "cake_strawberry_8" }
+  ],
+  frameRate: 4,
+  repeat: 0
+});
+
+// Matcha Drinking Animation
+this.anims.create({
+  key: "matchaDrink",
+  frames: [
+    { key: "matcha_latte_1" },
+    { key: "matcha_latte_2" },
+    { key: "matcha_latte_3" },
+    { key: "matcha_latte_4" },
+    { key: "matcha_latte_5" },
+    { key: "matcha_latte_6" },
+    { key: "matcha_latte_7" },
+    { key: "matcha_latte_8" }
+  ],
+  frameRate: 4,
+  repeat: 0
+});
     this.scene.start("CafeScene");
   }
 }

@@ -25,7 +25,7 @@ export default class CafeScene extends Phaser.Scene {
 
     // PLAYER
     this.player = this.physics.add.sprite(300, 300, "player_1");
-    this.player.setScale(0.2);
+    this.player.setScale(0.24);
     this.player.setOrigin(0.5, 1);
     this.player.setDepth(10);
 
@@ -35,12 +35,15 @@ export default class CafeScene extends Phaser.Scene {
       const b = this.player.getBounds();
       return {
         x: this.player.x,
-        y: b.y + b.height * 0.45
+        y: b.y + b.height * 0.50
       };
     };
 
     this.heldItem = null;
     this.heldSprite = null;
+    // Walking animation
+    this.walkFrame = 1;
+    this.walkTimer = 0;
 
     // -----------------------------
     // FIXED BASELINE SYSTEM
@@ -62,14 +65,14 @@ export default class CafeScene extends Phaser.Scene {
       const surfaceY = pos.y * TILE;
 
       // TABLE sits BELOW surface slightly
-      this.add.image(x, surfaceY + 12, "table_1")
-        .setDisplaySize(64, 64)
+      this.add.image(x, surfaceY + 33, "table_1")
+        .setDisplaySize(76, 76)
         .setOrigin(0.5, 1)
         .setDepth(3);
 
       // CHAIR sits slightly lower again
       this.add.image(x, surfaceY + 20, "chair_1")
-        .setDisplaySize(48, 48)
+        .setDisplaySize(58, 58)
         .setOrigin(0.5, 1)
         .setDepth(2);
 
@@ -79,7 +82,7 @@ export default class CafeScene extends Phaser.Scene {
         seatX: x,
         seatY: surfaceY + 20,
         foodX: x,
-        foodY: surfaceY + 8,
+        foodY: surfaceY + -15,
         occupied: false,
         foodSprite: null
       });
@@ -111,32 +114,84 @@ export default class CafeScene extends Phaser.Scene {
       types[Phaser.Math.Between(0, 2)]
     );
 
-    customer.setScale(0.14);
+    customer.setScale(0.17);
     customer.setOrigin(0.5, 1);
     customer.setDepth(2);
 
-    this.customers.push({
-      sprite: customer,
-      sitTexture: sitTypes[Phaser.Math.Between(0, 2)],
-      order: orders[Phaser.Math.Between(0, 1)],
-      table,
-      state: "walking",
-      targetX: table.seatX,
-      targetY: table.seatY
-    });
+    const typeIndex = Phaser.Math.Between(0, 2);
+
+this.customers.push({
+  sprite: customer,
+  sitTexture: sitTypes[typeIndex],
+  walkTexture: types[typeIndex],
+  isStanding: false,
+  order: orders[Phaser.Math.Between(0, 1)],
+  table,
+  state: "walking",
+  targetX: table.seatX,
+  targetY: table.seatY,
+
+  // exit position (left side of screen)
+  exitX: -50,
+  exitY: 60 + this.customers.length * 60
+});
   }
 
   update() {
     const speed = 200;
 
     // PLAYER MOVE
-    this.player.setVelocity(0);
+   // PLAYER MOVE
+this.player.setVelocity(0);
 
-    if (this.cursors.left.isDown) this.player.setVelocityX(-speed);
-    else if (this.cursors.right.isDown) this.player.setVelocityX(speed);
+let moving = false;
 
-    if (this.cursors.up.isDown) this.player.setVelocityY(-speed);
-    else if (this.cursors.down.isDown) this.player.setVelocityY(speed);
+if (this.cursors.left.isDown) {
+  this.player.setVelocityX(-speed);
+  moving = true;
+}
+else if (this.cursors.right.isDown) {
+  this.player.setVelocityX(speed);
+  moving = true;
+}
+
+if (this.cursors.up.isDown) {
+  this.player.setVelocityY(-speed);
+  moving = true;
+}
+else if (this.cursors.down.isDown) {
+  this.player.setVelocityY(speed);
+  moving = true;
+}
+
+// Animate player while moving
+if (moving) {
+
+  this.walkTimer++;
+
+  if (this.walkTimer >= 8) {
+
+    this.walkTimer = 0;
+
+    this.walkFrame++;
+
+    if (this.walkFrame > 3) {
+      this.walkFrame = 1;
+    }
+    console.log("Switching to", `player_${this.walkFrame}`);
+    this.player.setTexture(`player_${this.walkFrame}`);
+  }
+
+} else {
+
+  this.walkFrame = 1;
+  this.walkTimer = 0;
+
+  if (this.player.texture.key !== "player_1") {
+    this.player.setTexture("player_1");
+  }
+
+};
 
     // EQUIP
     if (Phaser.Input.Keyboard.JustDown(this.keys.one)) {
@@ -166,14 +221,24 @@ export default class CafeScene extends Phaser.Scene {
             if (t.foodSprite) t.foodSprite.destroy();
 
             // 🔥 NOW PERFECTLY ALIGNED TO SURFACE
-            t.foodSprite = this.add.image(
-              t.foodX,
-              t.foodY,
-              `${this.heldItem}_1`
-            )
-              .setScale(0.08)
-              .setDepth(4);
+            t.foodSprite = this.add.sprite(
+  t.foodX,
+  t.foodY,
+  `${this.heldItem}_1`
+);
 
+t.foodSprite.setScale(0.10);
+t.foodSprite.setDepth(4);
+
+// store what animation to use
+t.foodSprite.foodType = this.heldItem;
+
+if (this.heldItem === "cake_strawberry") {
+    t.foodSprite.anims.play("cakeEat");
+}
+else if (this.heldItem === "matcha_latte") {
+    t.foodSprite.anims.play("matchaDrink");
+}
             this.heldItem = null;
 
             if (this.heldSprite) this.heldSprite.destroy();
@@ -181,10 +246,17 @@ export default class CafeScene extends Phaser.Scene {
             c.state = "eating";
 
             this.time.delayedCall(2000, () => {
-              c.sprite.destroy();
-              t.occupied = false;
-              this.customers = this.customers.filter(x => x !== c);
-            });
+
+  if (t.foodSprite) {
+    t.foodSprite.destroy();
+    t.foodSprite = null;
+  }
+
+  // SAFE: use stored textures instead of undefined variable
+  c.sprite.setTexture(c.walkTexture);
+  c.state = "leaving";
+
+});
           }
         });
       }
@@ -193,21 +265,50 @@ export default class CafeScene extends Phaser.Scene {
     // CUSTOMER LOGIC
     this.customers.forEach(c => {
 
-      if (c.state === "walking") {
-        const dx = c.targetX - c.sprite.x;
-        const dy = c.targetY - c.sprite.y;
+  if (c.state === "walking") {
 
-        const dist = Math.sqrt(dx * dx + dy * dy);
+    const dx = c.targetX - c.sprite.x;
+    const dy = c.targetY - c.sprite.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
 
-        if (dist > 2) {
-          c.sprite.setVelocity((dx / dist) * 120, (dy / dist) * 120);
-        } else {
-          c.sprite.setVelocity(0, 0);
-          c.state = "seated";
-          c.sprite.setTexture(c.sitTexture);
-        }
-      }
-    });
+    if (dist > 2) {
+      c.sprite.setVelocity((dx / dist) * 120, (dy / dist) * 120);
+    } else {
+      c.sprite.setVelocity(0, 0);
+      c.state = "seated";
+      c.sprite.setTexture(c.sitTexture);
+    }
+  }
+
+  else if (c.state === "leaving") {
+
+  // safety guard (prevents crash if data missing)
+  if (!c.sprite || !c.sprite.active) return;
+
+  // make sure they are standing (fallback-safe)
+  if (!c.isStanding) {
+    c.sprite.setTexture(c.walkTexture || c.sitTexture);
+    c.isStanding = true;
+  }
+
+ const dx = c.exitX - c.sprite.x;
+ const dy = 0;
+
+  const dist = Math.sqrt(dx * dx + dy * dy);
+
+  if (dist > 5) {
+    c.sprite.setVelocity((dx / dist) * 120, (dy / dist) * 120);
+  } else {
+
+    c.sprite.destroy();
+    c.table.occupied = false;
+
+    this.customers = this.customers.filter(x => x !== c);
+  }
+}
+
+});
+
 
     // PLAYER ITEM FOLLOW HAND
     if (this.heldSprite) {
@@ -229,7 +330,7 @@ export default class CafeScene extends Phaser.Scene {
       `${item}_1`
     );
 
-    this.heldSprite.setScale(0.08);
+    this.heldSprite.setScale(0.10);
     this.heldSprite.setDepth(11);
   }
 }
