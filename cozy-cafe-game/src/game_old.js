@@ -63,7 +63,8 @@ export default class CafeScene extends Phaser.Scene {
     // -------------------------
     // CAMERA FIX
     // -------------------------
-    this.cameras.main.setZoom(1);
+    this.cameras.main.setZoom(1.5);
+    this.cameras.main.startFollow(this.player, true);
     this.cameras.main.centerOn(450, 300);
 
     // BACKGROUND
@@ -93,12 +94,12 @@ export default class CafeScene extends Phaser.Scene {
     seats.forEach(([x, y]) => {
       // TABLE (IN FRONT)
       const table = this.add.image(x, y, "table");
-      table.setDisplaySize(64, 64);
-      table.setDepth(2);
+      table.setDisplaySize(120, 120);
+      table.setDepth(3);
 
       // CHAIR (SLIGHTLY BEHIND TABLE)
       const chair = this.physics.add.staticSprite(x, y + 10, "chair");
-      chair.setDisplaySize(48, 48);
+      chair.setDisplaySize(90, 90);
       chair.setDepth(1);
 
       this.chairs.push({
@@ -131,7 +132,7 @@ export default class CafeScene extends Phaser.Scene {
 
     const customer = this.physics.add.sprite(850, 300, types[i], 0);
     customer.setScale(2);
-    customer.setDepth(1);
+    customer.setDepth(2);
 
     const chair = this.chairs.find(c => !c.occupied);
     if (!chair) return;
