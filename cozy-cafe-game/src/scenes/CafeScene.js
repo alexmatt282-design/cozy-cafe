@@ -11,14 +11,19 @@ export default class CafeScene extends Phaser.Scene {
   updateOrderUI() {
     let text = "ORDERS:\n\n";
 
-    this.customers.forEach((c, i) => {
-      if (!c) return;
+    for (const table of this.tables) {
 
-      text += `Table ${i + 1}: ${c.order ?? "NO ORDER"} (${c.state})\n`;
-    });
+        const customer = this.customers.find(c => c.table === table);
+
+        if (customer) {
+            text += `Table ${table.number}: ${customer.order ?? "NO ORDER"} (${customer.state})\n`;
+        } else {
+            text += `Table ${table.number}: Empty\n`;
+        }
+    }
 
     this.orderText.setText(text);
-  }
+}
 
   updateKeyHelp() {
     this.keyHelp.setText(
@@ -105,17 +110,44 @@ X = clear item`
 
     // PLAYER
     this.player = this.physics.add.sprite(300, 300, "player_1");
-    this.player.setScale(0.42);
+    this.player.setScale(0.45);
     this.player.setDepth(10);
 
+    this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
+    this.cameras.main.setZoom(1);
+    this.cameras.main.setBounds(-200, 20, -200, 20);
+
+    this.anims.create({
+    key: "player_walk",
+    frames: [
+        { key: "player_1" },
+        { key: "player_2" },
+        { key: "player_3" }
+    ],
+    frameRate: 8,
+    repeat: -1
+});
+
     // UI
-    this.orderText = this.add.text(20, 20, "ORDERS:\n", {
-      fontFamily: "Arial",
-      fontSize: "16px",
-      color: "#000",
-      backgroundColor: "#ffffff",
-      padding: { x: 10, y: 10 }
-    }).setScrollFactor(0).setDepth(1000);
+    this.orderText = this.add.text(10, 10, "ORDERS:\n", {
+  fontFamily: "Arial",
+  fontSize: "12px",
+  color: "#000",
+  backgroundColor: "#ffffff",
+  padding: { x: 6, y: 6 }
+})
+.setScrollFactor(0)
+.setDepth(1000);
+
+this.keyHelp = this.add.text(10, 110, "", {
+  fontFamily: "Arial",
+  fontSize: "11px",
+  color: "#000",
+  backgroundColor: "#ffffff",
+  padding: { x: 6, y: 6 }
+})
+.setScrollFactor(0)
+.setDepth(1000);
 
     this.keyHelp = this.add.text(20, 140, "", {
       fontFamily: "Arial",
@@ -135,28 +167,28 @@ X = clear item`
       { x: 8, y: 9 },
       { x: 11, y: 9 }
     ];
-
-    layout.forEach(pos => {
+    layout.forEach((pos, index) => {
       const x = pos.x * TILE;
       const y = pos.y * TILE;
 
       this.add.image(x, y + 33, "table_1")
-        .setDisplaySize(76, 76)
+        .setDisplaySize(140, 140)
         .setDepth(3);
 
       this.add.image(x, y + 20, "chair_1")
-        .setDisplaySize(58, 58)
+        .setDisplaySize(100, 100)
         .setDepth(1);
 
       this.tables.push({
-        x,
-        seatX: x,
-        seatY: y + 20,
-        foodX: x,
-        foodY: y - 15,
-        occupied: false,
-        foodSprite: null
-      });
+    number: index + 1,
+    x,
+    seatX: x,
+    seatY: y + 5,
+    foodX: x,
+    foodY: y + 10,
+    occupied: false,
+    foodSprite: null
+});
     });
 
     this.customers = [];
@@ -180,19 +212,32 @@ X = clear item`
 
     table.occupied = true;
 
-    const sprite = this.physics.add.sprite(100, 100, "customer1");
-    sprite.setScale(0.33);
+    const customerTypes = [
+  { walk: "customer1", sit: "customerSit1" },
+  { walk: "customer2", sit: "customerSit2" },
+  { walk: "customer3", sit: "customerSit3" },
+  { walk: "customer4", sit: "customerSit4" },
+  { walk: "customer5", sit: "customerSit5" },
+  { walk: "customer6", sit: "customerSit6" },
+  { walk: "customer7", sit: "customerSit7" },
+  { walk: "customer8", sit: "customerSit8" }
+];
 
-    this.customers.push({
-      sprite,
-      table,
-      state: "walking",
-      targetX: table.seatX,
-      targetY: table.seatY,
-      order: null,
-      exitX: -100
-    });
+const type = Phaser.Utils.Array.GetRandom(customerTypes);
 
+const sprite = this.physics.add.sprite(100, 100, type.walk);
+sprite.setScale(0.33);
+
+this.customers.push({
+  sprite,
+  sitTexture: type.sit,
+  table,
+  state: "walking",
+  targetX: table.seatX,
+  targetY: table.seatY,
+  order: null,
+  exitX: -100
+});
     sprite.setDepth(2);
   }
 
@@ -244,9 +289,19 @@ X = clear item`
 
         if (t.foodSprite) t.foodSprite.destroy();
 
-        t.foodSprite = this.add.image(t.foodX, t.foodY, this.ITEMS[this.heldItem]);
-        t.foodSprite.setScale(0.17);
+        t.foodSprite = this.add.image(
+    t.foodX,
+    t.foodY,
+    this.ITEMS[this.heldItem]
+);
 
+if (this.heldItem === "cake_strawberry" || this.heldItem === "matcha_latte") {
+    t.foodSprite.setScale(0.17);
+} else {
+    t.foodSprite.setScale(0.28);
+}
+
+t.foodSprite.setDepth(4);
         this.clearHeldItem();
 
         c.state = "eating";
@@ -255,6 +310,8 @@ X = clear item`
           t.foodSprite?.destroy();
           c.state = "leaving";
         });
+
+        t.foodSprite.setDepth(4);
 
         break;
       }
@@ -303,25 +360,16 @@ if (Phaser.Input.Keyboard.JustDown(this.keys.f)) {
 
 
     // ✅ FIXED ANIMATION
-    let moving =
-      this.cursors.left.isDown ||
-      this.cursors.right.isDown ||
-      this.cursors.up.isDown ||
-      this.cursors.down.isDown;
+    const moving =
+    this.player.body.velocity.x !== 0 ||
+    this.player.body.velocity.y !== 0;
 
-    if (moving) {
-      this.walkTimer++;
-
-      if (this.walkTimer > 8) {
-        this.walkTimer = 0;
-        this.walkFrame++;
-        if (this.walkFrame > 3) this.walkFrame = 1;
-        this.player.setTexture(`player_${this.walkFrame}`);
-      }
-    } else {
-      this.walkFrame = 1;
-      this.player.setTexture("player_1");
-    }
+if (moving) {
+    this.player.anims.play("player_walk", true);
+} else {
+    this.player.anims.stop();
+    this.player.setTexture("player_1");
+}
     if (Phaser.Input.Keyboard.JustDown(this.keys.x)) {
       this.clearHeldItem();
     }
@@ -351,7 +399,7 @@ if (Phaser.Input.Keyboard.JustDown(this.keys.f)) {
           c.sprite.setVelocity((dx / dist) * 120, (dy / dist) * 120);
         } else {
           c.sprite.setVelocity(0, 0);
-          c.sprite.setTexture("customerSit1");
+          c.sprite.setTexture(c.sitTexture);
 
           c.state = "waitingToOrder";
 
@@ -375,14 +423,25 @@ if (Phaser.Input.Keyboard.JustDown(this.keys.f)) {
   // ITEM HANDLING
   // -----------------------------
   equipItem(item) {
-    this.heldItem = item;
+  this.heldItem = item;
 
-    if (this.heldSprite) this.heldSprite.destroy();
+  if (this.heldSprite) this.heldSprite.destroy();
 
-    this.heldSprite = this.add.image(this.player.x, this.player.y, this.ITEMS[item]);
+  this.heldSprite = this.add.image(
+    this.player.x,
+    this.player.y,
+    this.ITEMS[item]
+  );
+
+  // Keep cake and matcha the same size
+  if (item === "cake_strawberry" || item === "matcha_latte") {
     this.heldSprite.setScale(0.17);
-    this.heldSprite.setDepth(11);
+  } else {
+    this.heldSprite.setScale(0.28); // make every other food larger
   }
+
+  this.heldSprite.setDepth(11);
+}
 
   clearHeldItem() {
     this.heldItem = null;
