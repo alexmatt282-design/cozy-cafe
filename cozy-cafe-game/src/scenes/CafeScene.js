@@ -134,27 +134,27 @@ X = clear item`
   fontSize: "12px",
   color: "#000",
   backgroundColor: "#ffffff",
-  padding: { x: 6, y: 6 }
+  padding: { x: 20, y: 20 }
 })
 .setScrollFactor(0)
-.setDepth(1000);
+.setDepth(2000);
 
 this.keyHelp = this.add.text(10, 110, "", {
   fontFamily: "Arial",
   fontSize: "11px",
   color: "#000",
   backgroundColor: "#ffffff",
-  padding: { x: 6, y: 6 }
+  padding: { x: 2, y: 2 }
 })
 .setScrollFactor(0)
 .setDepth(1000);
 
-    this.keyHelp = this.add.text(20, 140, "", {
+    this.keyHelp = this.add.text(20, 230, "", {
       fontFamily: "Arial",
       fontSize: "14px",
       color: "#000",
       backgroundColor: "#ffffff",
-      padding: { x: 10, y: 10 }
+      padding: { x: 20, y: 10 }
     }).setScrollFactor(0).setDepth(1000);
 
     this.updateKeyHelp();
@@ -162,11 +162,20 @@ this.keyHelp = this.add.text(10, 110, "", {
     // TABLES
     this.tables = [];
     const layout = [
-      { x: 8, y: 6 },
-      { x: 11, y: 6 },
-      { x: 8, y: 9 },
-      { x: 11, y: 9 }
-    ];
+  { x: 8,  y: 6 },
+  { x: 11, y: 6 },
+  { x: 14, y: 6 },
+  
+
+  { x: 8,  y: 10 },
+  { x: 11, y: 10 },
+  { x: 14, y: 10 },
+
+  { x: 8,  y: 14 },
+  { x: 11, y: 14 },
+  { x: 14, y: 14 },
+ 
+];
     layout.forEach((pos, index) => {
       const x = pos.x * TILE;
       const y = pos.y * TILE;
@@ -194,7 +203,7 @@ this.keyHelp = this.add.text(10, 110, "", {
     this.customers = [];
 
     this.time.addEvent({
-      delay: 2500,
+      delay: 3500,
       loop: true,
       callback: () => this.spawnCustomer()
     });
@@ -307,9 +316,17 @@ t.foodSprite.setDepth(4);
         c.state = "eating";
 
         this.time.delayedCall(1500, () => {
-          t.foodSprite?.destroy();
-          c.state = "leaving";
-        });
+    t.foodSprite?.destroy();
+
+    c.sprite.setTexture(c.walkTexture);
+    c.sprite.y += 12;
+
+    c.state = "standingUp";
+
+    this.time.delayedCall(300, () => {
+        c.state = "leaving";
+    });
+});
 
         t.foodSprite.setDepth(4);
 
@@ -396,7 +413,7 @@ if (moving) {
         const dist = Math.hypot(dx, dy);
 
         if (dist > 2) {
-          c.sprite.setVelocity((dx / dist) * 120, (dy / dist) * 120);
+          c.sprite.setVelocity((dx / dist) * 75, (dy / dist) * 75);
         } else {
           c.sprite.setVelocity(0, 0);
           c.sprite.setTexture(c.sitTexture);
@@ -406,9 +423,11 @@ if (moving) {
           // (NO ORDER RANDOMIZATION HERE ANYMORE)
         }
       }
-
+      if (c.state === "standingUp") {
+          c.sprite.setVelocity(0, 0);
+}
       if (c.state === "leaving") {
-        c.sprite.setVelocity(-120, 0);
+        c.sprite.setVelocity(-75, 0);
 
         if (c.sprite.x < c.exitX) {
           c.table.occupied = false;
